@@ -6,3 +6,4 @@ __pycache__/
 raw/
 data/crm.db
 .pytest_cache/
+video/
