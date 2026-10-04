@@ -53,8 +53,8 @@ def test_a_second_run_finds_nothing_new(crm):
 
 def test_approval_is_recorded_with_who_and_when(crm):
     run_once(crm)
-    crm.set_decision("LD-4473", "reply sent", "ha@fernwood.demo", "2026-10-04T18:00:00+00:00")
+    crm.set_decision("LD-4473", "reply sent", "ha@fernwood.example", "2026-10-04T18:00:00+00:00")
     row = crm.get("LD-4473")
     assert row["status"] == "reply sent"
-    assert row["decided_by"] == "ha@fernwood.demo"
+    assert row["decided_by"] == "ha@fernwood.example"
     assert row["decided_at"].startswith("2026-10-04")

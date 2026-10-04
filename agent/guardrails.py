@@ -7,7 +7,7 @@ SPAM_MARKERS = [
     "unsubscribe at any time", "dear sir/madam", "not ranking for key terms",
 ]
 COMPETITOR_MARKERS = ["partnership", "referral arrangement", "overflow", "white label", "white-label"]
-DISPOSABLE = ("rank-faster-now.biz", "mailinator.com", "guerrillamail.com")
+DISPOSABLE = ("rank-faster-now.example", "temp-inbox.example", "throwaway-mail.example")
 EMAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[a-z]{2,}$", re.I)
 
 

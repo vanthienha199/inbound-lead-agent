@@ -60,7 +60,7 @@ def approvals(request: Request):
 @app.post("/approvals/{lead_id}")
 def decide(lead_id: str, action: str = Form(...)):
     status = "reply sent" if action == "approve" else "declined"
-    crm.set_decision(lead_id, status, "ha@fernwood.demo",
+    crm.set_decision(lead_id, status, "ha@fernwood.example",
                      datetime.now(timezone.utc).isoformat(timespec="seconds"))
     return RedirectResponse("/approvals", status_code=303)
 

@@ -1,8 +1,8 @@
 {
-  "meridian-dental.co.uk": {"name": "Meridian Dental Group", "industry": "Healthcare", "employees": 48, "country": "United Kingdom", "founded": 2011, "website_age_years": 8},
-  "tradewinds-logistics.com": {"name": "Tradewinds Logistics", "industry": "Logistics", "employees": 310, "country": "United States", "founded": 2004, "website_age_years": 10},
-  "pinefield.studio": {"name": "Pinefield Studio", "industry": "Design agency", "employees": 7, "country": "Portugal", "founded": 2019, "website_age_years": 3},
-  "northvale-charity.org": {"name": "Northvale Children's Trust", "industry": "Non profit", "employees": 22, "country": "United Kingdom", "founded": 1998, "website_age_years": 6},
-  "kestrel-instruments.de": {"name": "Kestrel Instruments GmbH", "industry": "Manufacturing", "employees": 140, "country": "Germany", "founded": 1992, "website_age_years": 5},
-  "rank-faster-now.biz": {"name": "Rank Faster Now", "industry": "Unknown", "employees": 0, "country": "Unknown", "founded": null, "website_age_years": 0}
+  "meridian-dental.example": {"name": "Meridian Dental Group", "industry": "Healthcare", "employees": 48, "country": "United Kingdom", "founded": 2011, "website_age_years": 8},
+  "tradewinds-logistics.example": {"name": "Tradewinds Logistics", "industry": "Logistics", "employees": 310, "country": "United States", "founded": 2004, "website_age_years": 10},
+  "pinefield.example": {"name": "Pinefield Studio", "industry": "Design agency", "employees": 7, "country": "Portugal", "founded": 2019, "website_age_years": 3},
+  "northvale-charity.example": {"name": "Northvale Children's Trust", "industry": "Non profit", "employees": 22, "country": "United Kingdom", "founded": 1998, "website_age_years": 6},
+  "kestrel-instruments.example": {"name": "Kestrel Instruments GmbH", "industry": "Manufacturing", "employees": 140, "country": "Germany", "founded": 1992, "website_age_years": 5},
+  "rank-faster-now.example": {"name": "Rank Faster Now", "industry": "Unknown", "employees": 0, "country": "Unknown", "founded": null, "website_age_years": 0}
 }
