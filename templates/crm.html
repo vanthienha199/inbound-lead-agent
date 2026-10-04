@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}CRM | Fernwood lead agent{% endblock %}
+{% block body %}
+<div class="pagehead"><div>
+  <h2>CRM</h2>
+  <p>One SQLite row per enquiry, written by the agent. The score and the guardrail verdict are stored with the lead, so any decision can be explained later.</p>
+</div></div>
+{% if not rows %}
+  <div class="empty"><div class="ico">&#9633;</div><b>No rows yet</b><span>Run the agent and every processed lead lands here.</span></div>
+{% else %}
+<table class="docs">
+  <thead><tr><th>Lead</th><th>Company</th><th class="num-col">Budget</th><th class="num-col">Score</th><th>Band</th><th>Guardrail</th><th>Status</th></tr></thead>
+  <tbody>
+  {% for r in rows %}
+    <tr>
+      <td><strong>{{ r.name }}</strong><div class="f">{{ r.id }} · {{ r.email }}</div></td>
+      <td>{{ r.company or '—' }}{% if r.industry %}<div class="f">{{ r.industry }}, {{ r.employees }} staff</div>{% endif %}</td>
+      <td class="num-col">{% if r.budget_usd %}{{ '{:,}'.format(r.budget_usd) }}{% else %}not stated{% endif %}</td>
+      <td class="num-col">{{ r.score }}</td>
+      <td><span class="band {{ 'hot' if r.band in ('hot','warm') }}">{{ r.band }}</span></td>
+      <td><span class="band {{ 'blocked' if r.guardrail=='blocked' }}">{{ r.guardrail }}</span></td>
+      <td>{{ r.status }}{% if r.decided_by %}<div class="f">by {{ r.decided_by }}</div>{% endif %}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+{% endblock %}

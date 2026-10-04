@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Tools | Fernwood lead agent{% endblock %}
+{% block body %}
+<div class="pagehead"><div>
+  <h2>Tool belt</h2>
+  <p>Everything the agent is allowed to do. Each call is logged with its arguments, what it returned and how long it took, so a run can be audited after the fact.</p>
+</div></div>
+<table class="docs">
+  <thead><tr><th>Tool</th><th>Arguments</th><th>Returns</th></tr></thead>
+  <tbody>
+  {% for t in schema %}
+    <tr>
+      <td><strong style="font-family:'JetBrains Mono',monospace;font-size:13px">{{ t.name }}</strong></td>
+      <td class="f">{% if t.args %}{% for k,v in t.args.items() %}{{ k }}: {{ v }}{% if not loop.last %}, {% endif %}{% endfor %}{% else %}none{% endif %}</td>
+      <td>{{ t.returns }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Fernwood lead agent{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/app.css">
+<script>var t=new URLSearchParams(location.search).get("theme");if(t)document.documentElement.dataset.theme=t;</script>
+</head>
+<body>
+<header class="bar"><div class="wrap bar-in">
+  <span class="mark">F</span><b>Fernwood lead agent</b>
+  <span class="tag" style="padding:5px 10px">Sample project, invented company</span>
+  <nav class="links">
+    <a href="/" class="{{ 'on' if page=='run' }}">Run log</a>
+    <a href="/approvals" class="{{ 'on' if page=='approvals' }}">Approvals{% if waiting %} ({{ waiting|length }}){% endif %}</a>
+    <a href="/crm" class="{{ 'on' if page=='crm' }}">CRM</a>
+    <a href="/tools" class="{{ 'on' if page=='tools' }}">Tools</a>
+  </nav>
+</div></header>
+<main class="wrap">{% block body %}{% endblock %}</main>
+<footer class="foot"><div class="wrap">Fernwood Studio is invented for this demo. Every lead, company and figure on this page is synthetic.</div></footer>
+</body>
+</html>
