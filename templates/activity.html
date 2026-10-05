@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Activity | Studio Lind{% endblock %}
+{% block mainclass %}narrow{% endblock %}
+{% block body %}
+<div class="pagehead">
+  <div>
+    <h2>Activity</h2>
+    <p>Every tool call from the last run, in order, with what it returned and how long it took. A step that fails is kept here rather than dropped, so a run can be audited after the fact.</p>
+  </div>
+  <div class="act">
+    <a class="btn ghost" href="/api/run.json" download>Download the log</a>
+  </div>
+</div>
+
+{% if not run %}
+  <div class="empty">
+    <h3>No run yet</h3>
+    <p>Start a run from the leads page and the whole tool call log appears here, ready to download as JSON.</p>
+    <a class="btn" href="/">Go to leads</a>
+  </div>
+{% else %}
+  <div class="summary">
+    {{ run.summary }}
+    <span>Started {{ run.started[11:16] }} UTC, {{ run.steps|length }} tool calls</span>
+  </div>
+
+  <div class="log">
+    {% for s in run.steps %}
+    <div class="row {{ 'failed' if s.status == 'error' }}">
+      <span>
+        <b>{{ s.tool.replace('_', ' ') }}</b>
+        {% if s.lead_id %}<span class="lead">{{ s.lead_id }}</span>{% endif %}
+      </span>
+      <span class="sum">{{ s.summary }}</span>
+      <span class="ms">{{ s.ms|duration }}</span>
+    </div>
+    {% endfor %}
+  </div>
+{% endif %}
+{% endblock %}

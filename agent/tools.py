@@ -1,7 +1,10 @@
 """The agent's tool belt. Every tool has a schema, so the log can show what was called."""
 
 import json
+import os
 import pathlib
+import urllib.error
+import urllib.request
 
 from .guardrails import domain_of, run as run_guardrails, verdict
 from .scoring import score_lead
@@ -16,7 +19,7 @@ SCHEMA = [
     {"name": "draft_reply", "args": {"lead_id": "string"}, "returns": "a first reply, written by the model"},
     {"name": "request_approval", "args": {"lead_id": "string"}, "returns": "pauses the run and waits for a person"},
     {"name": "save_to_crm", "args": {"lead_id": "string"}, "returns": "the row written to SQLite"},
-    {"name": "post_team_summary", "args": {}, "returns": "one message for the team channel"},
+    {"name": "post_team_summary", "args": {}, "returns": "posts one message to the team channel webhook"},
 ]
 
 
@@ -76,12 +79,31 @@ class Tools:
         self.crm.upsert(row)
         return row, f"Row {row['id']} written with status {row['status']}"
 
-    def post_team_summary(self, rows):
+    def summary_text(self, rows):
         hot = [r for r in rows if r["band"] in ("hot", "warm")]
         blocked = [r for r in rows if r["guardrail"] == "blocked"]
         waiting = [r for r in rows if r["status"] == "awaiting approval"]
-        msg = (
+        return (
             f"{len(rows)} new enquiries. {len(hot)} worth a call, "
             f"{len(waiting)} waiting on your approval, {len(blocked)} blocked as spam."
         )
-        return {"message": msg}, msg
+
+    def post_team_summary(self, rows):
+        """Posts to TEAM_WEBHOOK when one is configured. A webhook that is down
+        raises here on purpose, so the run log shows the failed step instead of
+        quietly pretending the team was told."""
+        msg = self.summary_text(rows)
+        url = os.environ.get("TEAM_WEBHOOK")
+        if not url:
+            return {"message": msg, "posted": False}, f"{msg} No webhook configured, nothing posted."
+        request = urllib.request.Request(
+            url,
+            data=json.dumps({"text": msg}).encode(),
+            headers={"content-type": "application/json"},
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=10) as response:
+                response.read()
+        except urllib.error.URLError as error:
+            raise RuntimeError(f"The team channel webhook did not answer. {error.reason}") from error
+        return {"message": msg, "posted": True}, f"Posted to the team channel. {msg}"

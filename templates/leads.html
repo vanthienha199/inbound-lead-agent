@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block title %}Leads | Studio Lind{% endblock %}
+{% block body %}
+<div class="pagehead">
+  <div>
+    <h2>Inbound leads</h2>
+    <p>The agent reads new form submissions, enriches and scores each one, checks it against the guardrails and drafts a reply. Anything scoring {{ threshold }} or more out of 100, and anything a guardrail flags, stops here for a person.</p>
+  </div>
+  <div class="act">
+    <form method="post" action="/run"><button class="btn" type="submit">Run the agent</button></form>
+    {% if rows %}<form method="post" action="/reset"><button class="btn ghost" type="submit">Reset</button></form>{% endif %}
+  </div>
+</div>
+
+{% if not rows %}
+  <div class="empty">
+    <h3>No leads yet</h3>
+    <p>Seven form submissions are sitting in the inbox. Start a run and each one is scored, checked and drafted, with every tool call kept.</p>
+    <form method="post" action="/run"><button class="btn" type="submit">Run the agent</button></form>
+  </div>
+{% else %}
+<table class="records">
+  <thead>
+    <tr>
+      <th>Lead</th>
+      <th>Source</th>
+      <th class="num">Budget</th>
+      <th class="num">Fit</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for r in rows %}
+    <tr class="{{ 'open' if open_lead and open_lead.id == r.id }}" onclick="location.href='/?lead={{ r.id }}'">
+      <td class="who">
+        <b>{{ r.name }}</b>
+        <span>{{ r.company or 'No company given' }}{% if r.industry %}, {{ r.industry }}{% endif %}</span>
+      </td>
+      <td>{{ r.source }}</td>
+      <td class="num">{% if r.budget_usd %}{{ '{:,}'.format(r.budget_usd) }} USD{% else %}Not stated{% endif %}</td>
+      <td class="num">
+        <span class="fit">
+          <i>{{ r.band }}</i>
+          <span class="bar-track"><span class="bar-fill" style="width: {{ (r.score * 0.54)|round|int }}px"></span></span>
+          <b>{{ r.score }}</b>
+        </span>
+      </td>
+      <td>
+        <span class="state {{ 'sent' if r.status == 'reply sent' }}{{ ' muted' if r.status in ('blocked', 'declined') }}" data-lead="{{ r.id }}"><b>{{ r.label }}</b></span>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+
+{% if open_lead %}
+<a class="scrim" href="/" aria-label="Close"></a>
+<aside class="drawer">
+  <div class="drawer-head">
+    <a class="close" href="/" aria-label="Close">&times;</a>
+    <h3>{{ open_lead.name }}</h3>
+    <div class="meta">
+      <span>{{ open_lead.company or 'No company given' }}</span>
+      <span>{{ open_lead.email }}</span>
+      <span>{{ open_lead.source }}</span>
+      <span>{{ open_lead.received_at[:10] }}</span>
+    </div>
+  </div>
+
+  {% if open_lead.reply %}
+  <div class="sect">
+    <h4>Draft reply, written by the agent and not sent</h4>
+    <div class="email">
+      <div class="to">To {{ open_lead.email }}</div>
+      {% for para in open_lead.reply.split('\n\n') %}<p>{{ para }}</p>{% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="sect">
+    <h4>{% if open_lead.reply %}Why this reply{% else %}Why this score{% endif %}</h4>
+    <ul class="why">
+      {% for label, points, detail in open_lead.reasons %}
+      <li><span><b style="font-weight:600">{{ label }}.</b> {{ detail }}</span><b>{{ points }}</b></li>
+      {% endfor %}
+      <li class="total"><span>Fit score, {{ open_lead.band }}</span><b>{{ open_lead.score }}</b></li>
+    </ul>
+    <p class="note">{% if open_lead.status == 'awaiting approval' %}Scored {{ open_lead.score }}, which is at or above the {{ threshold }} approval line, so the agent stopped and asked.{% elif open_lead.status == 'blocked' %}A guardrail blocked this one before any reply was written.{% elif open_lead.status == 'replied automatically' %}Scored below the {{ threshold }} approval line with no guardrail flag, so the agent replied on its own.{% else %}Decided by {{ open_lead.decided_by }} on {{ open_lead.decided_at[:10] }}.{% endif %}</p>
+  </div>
+
+  {% if open_lead.findings %}
+  <div class="sect guards">
+    <h4>Guardrails</h4>
+    {% for f in open_lead.findings %}
+    <div class="finding {{ 'block' if f.action == 'block' }}">
+      <b>{{ f.rule }}</b>
+      <span>{{ f.detail }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if open_lead.trail %}
+  <div class="sect">
+    <h4>What the agent did</h4>
+    <ul class="trail">
+      {% for s in open_lead.trail %}
+      <li class="{{ 'failed' if s.status == 'error' }}">
+        <span><b>{{ s.tool.replace('_', ' ') }}</b><span>{{ s.summary }}</span></span>
+        <span class="ms">{{ s.ms|duration }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  <div class="decide">
+    {% if open_lead.status == 'awaiting approval' %}
+      <form method="post" action="/decide/{{ open_lead.id }}" data-decide><input type="hidden" name="action" value="approve"><button class="btn go" type="submit">Approve and send</button></form>
+      <form method="post" action="/decide/{{ open_lead.id }}" data-decide><input type="hidden" name="action" value="decline"><button class="btn ghost" type="submit">Decline</button></form>
+    {% else %}
+      <span class="said" data-said>{{ open_lead.label }}{% if open_lead.decided_by %}, by {{ open_lead.decided_by }}{% endif %}</span>
+    {% endif %}
+  </div>
+</aside>
+{% endif %}
+{% endblock %}
+
+{% block script %}
+<script>
+/* Approving posts in place so the row can move from "Waiting for you" to the
+   sent time without a reload, which is the only motion on the page. */
+document.querySelectorAll("form[data-decide]").forEach((form) => {
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    /* getAttribute, not form.action: a field named "action" shadows the
+       property, so form.action would be the input element. */
+    const res = await fetch(form.getAttribute("action"), {
+      method: "POST",
+      headers: { Accept: "application/json" },
+      body: new FormData(form),
+    });
+    const data = await res.json();
+    const cell = document.querySelector(`.state[data-lead="${data.id}"]`);
+    if (cell) {
+      cell.querySelector("b").textContent = data.label;
+      cell.className = "state enter" + (data.status === "reply sent" ? " sent" : " muted");
+    }
+    const decide = form.closest(".decide");
+    decide.innerHTML = `<span class="said">${data.label}, by ha@studiolind.example</span>`;
+  });
+});
+</script>
+{% endblock %}

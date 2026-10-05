@@ -7,6 +7,7 @@ SCHEMA = """
 CREATE TABLE IF NOT EXISTS leads (
   id            TEXT PRIMARY KEY,
   received_at   TEXT NOT NULL,
+  source        TEXT,
   name          TEXT NOT NULL,
   email         TEXT NOT NULL,
   company       TEXT,
@@ -18,10 +19,19 @@ CREATE TABLE IF NOT EXISTS leads (
   guardrail     TEXT NOT NULL,
   status        TEXT NOT NULL,
   reply         TEXT,
+  reasons       TEXT,
+  findings      TEXT,
+  backend       TEXT,
+  trail         TEXT,
   decided_by    TEXT,
   decided_at    TEXT
 );
 """
+
+# Columns added after the first release. SQLite has no "add column if missing",
+# so an existing database is brought forward one column at a time.
+LATER_COLUMNS = {"source": "TEXT", "reasons": "TEXT", "findings": "TEXT",
+                 "backend": "TEXT", "trail": "TEXT"}
 
 
 class Crm:
@@ -30,6 +40,10 @@ class Crm:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         with self._conn() as c:
             c.executescript(SCHEMA)
+            have = {r["name"] for r in c.execute("PRAGMA table_info(leads)")}
+            for column, kind in LATER_COLUMNS.items():
+                if column not in have:
+                    c.execute(f"ALTER TABLE leads ADD COLUMN {column} {kind}")
 
     def _conn(self):
         conn = sqlite3.connect(self.path)

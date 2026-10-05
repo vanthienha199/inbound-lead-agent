@@ -4,7 +4,7 @@ An AI agent that works an inbound lead inbox end to end: it reads new form submi
 enriches each company, scores the lead against a written rubric, runs guardrails, drafts a
 reply, and then stops and waits for a person before anything is sent. Every tool call is
 recorded with its arguments, its result and how long it took, so a run can be audited
-afterwards. The sample company, Fernwood Studio, and all seven enquiries are invented for
+afterwards. The sample company, Studio Lind, and all seven enquiries are invented for
 this demo. It runs with no API key at all, using a deterministic template writer, and
 switches to a real model with one line in a config file.
 
@@ -16,7 +16,9 @@ python3 -m venv .venv
 .venv/bin/uvicorn app:app --reload
 ```
 
-Open http://127.0.0.1:8000 and press "Run the agent".
+Open http://127.0.0.1:8000 and press "Run the agent". The lead list is the home page.
+Click any row to open the drawer, which holds the drafted reply, the points behind the
+score, the guardrail findings and every tool call the agent made for that lead.
 
 ## Tests
 
@@ -24,8 +26,10 @@ Open http://127.0.0.1:8000 and press "Run the agent".
 .venv/bin/python -m pytest tests -q
 ```
 
-15 tests, no API key needed. They cover currency parsing, the scoring rubric, each
-guardrail, and the three routes a lead can take through the agent.
+18 tests, no API key needed. They cover currency parsing, the scoring rubric, each
+guardrail, the three routes a lead can take through the agent, the working each row keeps,
+and a dead team webhook, which has to be logged as a failed step without costing the
+operator the run summary.
 
 ## How the agent decides
 
@@ -47,6 +51,20 @@ and a single `block` stops the run for that lead before the model is ever called
 a one line summary for the log. `agent/runner.py` is the loop that calls them and records a
 step for every call. To automate a different workflow, change those two files and leave the
 log, the guardrails and the approval gate as they are.
+
+## The team webhook
+
+Set `TEAM_WEBHOOK` to post the one line run summary to a channel. When it is not set
+nothing is posted and the log says so. When it is set and the endpoint is down, the step
+is recorded as failed and the summary is still computed locally, so a broken channel never
+costs the operator the one line that says what happened.
+
+## Gallery captures
+
+`scripts/stage.sh` brings up the two extra instances the screenshots need, one with an
+empty database and one with a dead team webhook, and `scripts/capture.mjs` takes every
+image from the running app. Both need puppeteer: run `npm i puppeteer` here, or point
+`PUPPETEER_FROM` at the `package.json` of a project that has it.
 
 ## Backends
 

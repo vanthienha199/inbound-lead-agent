@@ -1,5 +1,6 @@
 """The agent loop. Every tool call is recorded so the run can be audited afterwards."""
 
+import json
 import time
 from datetime import datetime, timezone
 
@@ -75,12 +76,14 @@ def run_once(crm):
                       lambda l=lead, c=company, s=score: tools.run_guardrails(l, c, s), lid)
 
         reply = None
+        backend = None
         if guard["verdict"] == "blocked":
             status = "blocked"
         else:
             drafted = _call(run, "draft_reply", {"lead_id": lid},
                             lambda l=lead, s=score: tools.draft_reply(l, s), lid)
             reply = (drafted or {}).get("reply")
+            backend = (drafted or {}).get("backend")
             if score["score"] >= APPROVAL_THRESHOLD or guard["verdict"] == "flagged":
                 _call(run, "request_approval", {"lead_id": lid},
                       lambda l=lead, s=score: tools.request_approval(l, s), lid)
@@ -91,6 +94,7 @@ def run_once(crm):
         row = {
             "id": lid,
             "received_at": lead["received_at"],
+            "source": lead.get("source") or "Contact form",
             "name": lead["name"],
             "email": lead["email"],
             "company": lead.get("company") or (company.get("name") if company else ""),
@@ -102,6 +106,16 @@ def run_once(crm):
             "guardrail": guard["verdict"],
             "status": status,
             "reply": reply,
+            "reasons": json.dumps(score["reasons"]),
+            "findings": json.dumps(guard["findings"]),
+            "backend": backend,
+            "trail": json.dumps(
+                [
+                    {"tool": st.tool, "summary": st.summary, "status": st.status, "ms": st.ms}
+                    for st in run.steps
+                    if st.lead_id == lid
+                ]
+            ),
             "decided_by": None,
             "decided_at": None,
         }
@@ -109,5 +123,7 @@ def run_once(crm):
         run.rows.append(row)
 
     posted = _call(run, "post_team_summary", {}, lambda: tools.post_team_summary(run.rows))
-    run.summary = (posted or {}).get("message", "Nothing new to process")
+    # The summary is computed from the rows, so a failed post never costs the
+    # operator the one line that says what happened.
+    run.summary = (posted or {}).get("message") or tools.summary_text(run.rows)
     return run

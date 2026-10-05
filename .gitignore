@@ -7,3 +7,6 @@ raw/
 data/crm.db
 .pytest_cache/
 video/
+scripts/tests.html
+scripts/log.html
+scripts/_object.html

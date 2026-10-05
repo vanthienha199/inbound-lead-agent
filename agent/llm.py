@@ -6,14 +6,15 @@ import subprocess
 import urllib.request
 
 SYSTEM = (
-    "You write a short first reply from Fernwood Studio, a web and brand design agency, "
+    "You write a short first reply from Studio Lind, a web and brand design agency, "
     "to someone who filled in the contact form.\n"
     "Rules:\n"
     "1. Four sentences at most. No greeting line longer than four words.\n"
     "2. Name one specific thing from their message so it is clearly not a template.\n"
     "3. Propose one concrete next step with a named time window.\n"
     "4. Never invent a price, a delivery date or a capability that was not given to you.\n"
-    "5. Plain English. No em dashes. No exclamation marks."
+    "5. Plain English. No em dashes. No exclamation marks.\n"
+    "6. Write as the studio. Use we, never I, and do not sign a personal name."
 )
 
 
@@ -73,7 +74,7 @@ def _template(lead, score, model):
         f"and what you described is clear enough for us to be useful quickly.\n\n"
         f"Could we book 30 minutes this week to walk through the detail and what a first phase would cover. "
         f"If you send two or three times that suit you, we will confirm one today.\n\n"
-        f"Best regards,\nFernwood Studio"
+        f"Best regards,\nStudio Lind"
     )
 
 
